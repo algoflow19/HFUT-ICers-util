@@ -105,11 +105,13 @@ class it_tree:
 #exit()
 
 
-	
+
 IMAGE_WIDTH=1440
 IMAGE_HEIGHT=900
+OUT_IMAGE_WIDTH=640
+OUT_IMAGE_HEIGHT=360
 TO_REMOVE=['folder','path','source','pose','truncated','difficult']
-ISLAPFUN=lambda a,b: a.ymin<=b.ymax and a.ymax>=b.ymin
+ISLAPFUN=lambda a,b: a[0]<=b[1] and a[1]>=b[0]
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
@@ -172,6 +174,10 @@ if __name__ == '__main__':
 			print('Find mul objets in '+ xml_file +', jump to next image.')
 			continue
 		else:
+			xmin=[]
+			xmax=[]
+			ymin=[]
+			ymax=[]
 			for attr in TO_REMOVE:
 				tmp=xml_tree.find(attr)
 				if(tmp): xml_tree.remove(tmp)
@@ -180,21 +186,28 @@ if __name__ == '__main__':
 				obj=objs[i]
 				box=obj.find('bndbox')
 				if(box is not None):
-					obj.xmin = int(box.find('xmin').text)
-					obj.xmax = int(box.find('xmax').text)
-					obj.ymin = int(box.find('ymin').text)
-					obj.ymax = int(box.find('ymax').text)
+					xmin.append(int(box.find('xmin').text))
+					xmax.append(int(box.find('xmax').text))
+					ymin.append(int(box.find('ymin').text))
+					ymax.append(int(box.find('ymax').text))
 				else: continue
 				# use a Interval Tree to slove the problem in O( n*log(n) )
 				tree=it_tree(ISLAPFUN)
 				left_objs[obj]=True
-				another=tree.overLapSearch(obj.xmin,obj.xmax,obj)
+				another=tree.overLapSearch(xmin[i],xmax[i],(ymin[i],ymax[i]))
 				if(another):
 					left_objs[another]=False
 					left_objs[obj]=False
 					print('Throw bang objects')
-				tree.insert(obj.xmin,obj.xmax,obj)
-			
+				tree.insert(xmin[i],xmax[i],(ymin[i],ymax[i]))
+			for index in range(0,objs):
+				if(left_objs[objs[index]]):
+					o_xmin=xmin[i]
+					o_xmax=xmax[i]
+					o_ymin=ymin[i]
+					o_ymax=ymax[i]
+					
+				
 		exit()
 		
 			
