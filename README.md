@@ -1,2 +1,2 @@
-# GreedCorp
-Implement the game logic of GreedCorp
+# | ICers Utils
+Useful python script for making the dataset.
