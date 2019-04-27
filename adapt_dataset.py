@@ -121,7 +121,6 @@ OUT_HEIGHT=360
 ISLAPFUN=lambda a,b: a.ymin<=b.ymax and a.ymax>=b.ymin
 
 def emliateInterval(toe,l):
-	if(len(l)): return
 	index=0
 	while(index<len(l)):
 		if(toe[0]<l[index][0]):
@@ -267,70 +266,80 @@ if __name__ == '__main__':
 				xmax.append(int(bndbox.find('xmax').text))
 				ymax.append(int(bndbox.find('ymax').text))
 				AB_tree.insert(((xmin[-1],ymin[-1]),(xmax[-1],ymax[-1])),objs[i])
-			
+			AB_tree.insert( ((0,-1),(IMAGE_WIDTH,0)) )
+			AB_tree.insert( ((-1,0),(0,IMAGE_HEIGHT)) )
+			AB_tree.insert(((IMAGE_WIDTH,0),(IMAGE_WIDTH+1,IMAGE_HEIGHT)))
+			AB_tree.insert(((0,IMAGE_HEIGHT),(IMAGE_WIDTH,IMAGE_HEIGHT+1)))
 			for i in range(0,len(objs)):
-				if(len(AB_tree.query(((xmin[-1],ymin[-1]),(xmax[-1],ymax[-1])))) > 1):
-					continue
-				box_xmin=max(0,xmax[i]-OUT_WIDTH)
-				box_ymin=max(0,ymax[i]-OUT_HEIGHT)
-				box_xmax=min(IMAGE_WIDTH,xmin[i]+OUT_WIDTH)
-				box_ymax=min(IMAGE_HEIGHT,ymin[i]+OUT_HEIGHT)
 				if(ymax[i]-ymin[i]>OUT_HEIGHT or xmax[i]-xmin[i]>OUT_WIDTH):
 					print("Object size is bigger than output size, skip...")
 					continue
+				if(len(AB_tree.query(((xmin[-1],ymin[-1]),(xmax[-1],ymax[-1])))) > 1):
+					continue
+				box_xmin=xmax[i]-OUT_WIDTH
+				box_ymin=ymax[i]-OUT_HEIGHT
+				box_xmax=xmin[i]+OUT_WIDTH
+				box_ymax=ymin[i]+OUT_HEIGHT
 				collsion=AB_tree.query(((box_xmin,box_ymin),(box_xmax,box_ymax)),True)
 				# Assume that it return the AABB list.
-				marker=list(np.resize((0,xmin[i]-box_xmin),(ymin[i]-box_ymin,2)))
+				marker=[[[0,xmin[i]-box_xmin]]*(ymin[i]-box_ymin)]
 				for aabb in collsion:
 					if(aabb == ((xmin[i],ymin[i]),(xmax[i],ymax[i]))):
 						continue
 					if( doOverLap(aabb,((xmin[i],ymax[i]),(xmax[i],box_ymax)))): # Top
-						for tmp in range( max((len(marker)-(box_ymax-aabb[0][1])),0), len(marker)): # ymin=aabb[0][1]
+						length=min(box_ymax-aabb[0][1],len(marker))
+						for tmp in range(len(marker)-length,len(marker)):  # ymin=aabb[0][1]
 							marker[tmp]=None
 						continue
 					if( doOverLap(aabb,((xmin[i],box_ymin),(xmax[i],ymin[i]))) ): # Bottom
-						for tmp in range(0,min(aabb[1][1]-box_ymin,len(marker))): # ymax=aabb[1][1]
+						length=min(len(marker),aabb[1][1]-box_ymin)
+						for tmp in range(0,length): # ymax=aabb[1][1]
 							marker[tmp]=None
 						continue
 					if(doOverLap(aabb,((box_xmin,ymin[i]),(xmin[i],ymax[i])))): # Left
+						length=aabb[1][0]-box_xmin
 						for tmp in range(0,len(marker)): #xmax=aabb[1][0]
 							if(marker[tmp] is None): continue
-							emliateInterval( (0,aabb[1][0]-box_xmin),marker[tmp])
+							emliateInterval( (0,length),marker[tmp])
 							if(len(marker[tmp])==0):
 								marker[tmp]=None
 						continue ##Correct Above.
 					if(doOverLap(aabb,((xmax[i],ymin[i]),(box_xmax,ymax[i]))) ): # Right
+						length=max(0,aabb[0][0]-xmax[i])
 						for tmp in range(0,len(marker)):
 							if(marker[tmp] is None): continue
-							emliateInterval((aabb[0][0],xmin[i]-box_xmin),marker[tmp])
-							if(len(marker[tmp]==0)):
+							emliateInterval((length,xmin[i]-box_xmin),marker[tmp])
+							if(len(marker[tmp])==0):
 								marker[tmp]=None
 						continue
 					if(doOverLap(aabb,((box_xmin,ymax[i]),(xmin[i],box_ymax)) ) ): # top left
-						for tmp in range(max(aabb[0][1]-ymax[i],0),min(min(box_ymax,aabb[1][1])-ymax[i]+1,len(marker))):
+						length=max(0,aabb[0][1]-ymax[i])
+						for tmp in range(length,len(marker)):
 							if(marker[tmp] is None): continue
-							emliateInterval( (max(box_xmin,aabb[0][0])-box_xmin,min(xmax[i],aabb[1][0])-box_xmin),marker[tmp])
+							emliateInterval((0,min(xmin[i]-box_xmin,aabb[1][0]-box_xmin)),marker[tmp])
 							if(len(marker[tmp])==0):
 								marker[tmp]=None
 						continue
 					if(doOverLap(aabb,((xmax[i],box_ymin),(box_xmax,ymin[i])))): #bottom right
-						for tmp in range(0,len(marker)):
+						length=min(len(marker),aabb[1][1]-box_ymin)
+						for tmp in range(0,length):
 							if(marker[tmp] is None): continue
-							emliateInterval((max(xmax[i],aabb[0][0])-xmax[i],min(box_xmax,aabb[1][0])-xmax[i]),marker[tmp])
+							emliateInterval((max(0,aabb[0][0]-xmax[i]),xmin[i]-box_xmin),marker[tmp])
 							if(len(marker[tmp])==0):
 								marker[tmp]=None
 						continue
 					if(doOverLap(aabb,((box_xmin,box_ymin),(xmin[i],ymin[i])) ) ): # bottom left
-						for tmp in range(0,len(marker)):
+						length=min(aabb[1][1]-box_ymin,len(marker))
+						for tmp in range(0,length):
 							if(marker[tmp] is None): continue
-							emliateInterval((max(box_xmin,aabb[0][0])-box_xmin,min(xmin[i],aabb[1][0])-box_xmin),marker[tmp])
+							emliateInterval( (0,min(aabb[1][0]-box_xmin,xmin[i]-box_xmin)),marker[tmp])
 							if(len(marker[tmp])==0):
 								marker[tmp]=None
-						continue
 					if(doOverLap(aabb,((xmax[i],ymax[i]),(box_xmax,box_ymax)))): # top right
-						for tmp in range(max(0,aabb[0][1]-box_ymax),len(marker)):
+						length=max(0,aabb[0][1]-ymax[i])
+						for tmp in range(length,len(marker)):
 							if(marker[tmp] is None): continue
-							emliateInterval( (max(xmax[i],aabb[0][0])-xmax[i],min(box_xmax,aabb[1][0])-xmax[i]),marker[tmp])
+							emliateInterval( (max(0,aabb[0][0]-xmax[i]),xmin[i]-box_xmin),marker[tmp])
 							if(len(marker[tmp])==0):
 								marker[tmp]=None
 						continue
@@ -390,8 +399,8 @@ if __name__ == '__main__':
 					
 				root=xml_tree				
 				annotation = ET.Element('annotation')
-				size=ET.SubElement(annotation,'size')
 				tmp=ET.SubElement(annotation,'filename')
+				size=ET.SubElement(annotation,'size')
 				tmp.text=image_name[:-4]
 				tmp=ET.SubElement(size,'width')
 				tmp.text=str(corp_xmax-corp_xmin)
