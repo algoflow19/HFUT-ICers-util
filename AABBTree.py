@@ -211,6 +211,4 @@ if __name__ == '__main__':
 #	tree_debug_travl(tree)
 	print('All Pass.')
 #Test for anyOverLapMuch
-	
-	
-	
+
