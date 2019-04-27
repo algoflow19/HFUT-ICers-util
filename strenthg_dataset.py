@@ -144,3 +144,6 @@ if __name__ == '__main__':
 			else:
 				print('Found xml file:'+file+'.xml, however no image file match it, skip.')
 		
+			
+		
+	
