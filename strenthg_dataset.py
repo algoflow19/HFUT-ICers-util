@@ -70,13 +70,11 @@ if __name__ == '__main__':
 					width=int(size.find('width').text)
 					height=int(size.find('height').text)
 					if(width>out_width):
-						print('Warring detect image width bigger then output width:'+str(width))
+						print('Warning detect image width bigger then output width:'+str(width))
 					if(height>out_height):
-						print('Warring detect image height bigger then output height:'+str(height))
-					toFull=np.zeros((max(height,out_height),max(width,out_width),3))
-					for i in range(0,height):
-						for j in range(0,width):
-							toFull[i][j]=img[i][j]
+						print('Warning detect image height bigger then output height:'+str(height))
+					toFull=np.zeros((max(height,out_height),max(width,out_width),3))+128+127*np.random.rand(max(height,out_height),max(width,out_width),3)
+					toFull[0:height,0:width]=img
 					cv2.imwrite(os.path.join(args.out_img_dir,file+img_back),toFull)
 					size.find('width').text=str(toFull.shape[1])
 					size.find('height').text=str(toFull.shape[0])

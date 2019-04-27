@@ -199,7 +199,8 @@ if __name__ == '__main__':
 	parser.add_argument('--allow_mulobj', help='allowed multilue objects image to be sampled',default='True')
 	parser.add_argument('--allow_bang', help='allowed bondboxs bang image to be sampled',default=None)
 	parser.add_help=True
-	
+	parser.description="This Tool is used to corp multiple objects in one image.\
+						It will produce images with single object."
 	if(DEBUG and len(sys.argv) < 5):
 		args=dumb()
 		args.img_dir='JPEGImages'
@@ -246,8 +247,6 @@ if __name__ == '__main__':
 			print('Find mul objets in '+ xml_file +', jump to next image.')
 			continue
 		else:
-			
-			
 			# Using a AABB tree for detect collsion.
 			AB_tree=AABBtree()
 			xmin=[]
@@ -369,7 +368,7 @@ if __name__ == '__main__':
 					collsion=AB_tree.query(((corp_xmin,corp_ymin),(corp_xmax,corp_ymax)),True)
 					collsion.remove( ((xmin[i],ymin[i]),(xmax[i],ymax[i])) )
 					if(len(collsion)>1 and anyOverLapMuch(((corp_xmin,corp_ymin),(corp_xmax,corp_ymax)),collsion)):
-						print("In XML file:"+xml_file+", object:"+objs[i].find('name').text+"("+str(i)+"), is bang clash with other object, so we stop to crop it out.")
+						print("In XML file:"+xml_file+", object:"+objs[i].find('name').text+"("+str(i)+"), is bang clash with other object, so we stop.")
 						print("Maybe we can figure out a way to handle it smarter later.")
 						continue
 					while(True):
