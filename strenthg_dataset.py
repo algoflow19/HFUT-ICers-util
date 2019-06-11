@@ -26,7 +26,7 @@ if __name__ == '__main__':
 	parser.add_argument('xml_dir')
 	parser.add_argument('out_img_dir')
 	parser.add_argument('out_xml_dir')
-	parser.add_argument('--effect',help='default = "rotate", support "rotate" and "resize" operation.')
+	parser.add_argument('--effect',help='default = "rotate", support "rotate" and "paddle" operation.')
 	parser.add_argument('--width',help='')
 	parser.add_argument('--height',help='')
 	parser.add_argument('--mode',help='choose do what strenthg to original dataset')
@@ -67,13 +67,13 @@ if __name__ == '__main__':
 				root=tree.getroot()
 				if(effect==0):
 					size=root.find('size')
-					width=int(size.find('width').text)
-					height=int(size.find('height').text)
+					width=img.shape[1]
+					height=img.shape[0]
 					if(width>out_width):
 						print('Warning detect image width bigger then output width:'+str(width))
 					if(height>out_height):
 						print('Warning detect image height bigger then output height:'+str(height))
-					toFull=np.zeros((max(height,out_height),max(width,out_width),3))+128+127*np.random.rand(max(height,out_height),max(width,out_width),3)
+					toFull=128+127*np.random.rand(max(height,out_height),max(width,out_width),3)
 					toFull[0:height,0:width]=img
 					cv2.imwrite(os.path.join(args.out_img_dir,file+img_back),toFull)
 					size.find('width').text=str(toFull.shape[1])

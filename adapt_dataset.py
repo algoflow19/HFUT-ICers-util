@@ -231,7 +231,7 @@ if __name__ == '__main__':
 			print('Found image with wrong size:' + xml_tree.find('filename').text)
 			exit(-1)
 		else: pass
-		image_name=xml_tree.find('filename').text
+		image_name=xml_file.replace('.xml','.JPG')
 		image=None
 		if('.jpg' not in (image_name).lower()): # Bug Shot.
 			image_name+='.jpg'
@@ -422,7 +422,7 @@ if __name__ == '__main__':
 				img=cv2.imread(os.path.join(args.img_dir,image_name))
 #				cv2.rectangle(img,(corp_xmin,corp_ymin),(corp_xmax,corp_ymax),1)
 #				cv2.imwrite(str(i)+image_name,img)
-				cv2.rectangle(img,(xmin[i],ymin[i]),(xmax[i],ymax[i]),2)
+#				cv2.rectangle(img,(xmin[i],ymin[i]),(xmax[i],ymax[i]),2)
 				cv2.imwrite(os.path.join(args.out_img_dir,str(i)+image_name),
 				img[corp_ymin:corp_ymax,corp_xmin:corp_xmax])
 				
